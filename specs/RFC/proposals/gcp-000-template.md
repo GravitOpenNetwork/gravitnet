@@ -1,1 +1,80 @@
-markdown # GCP-0000: Proposal Template Status: Draft Type: Standards Track | Process | Informational Scope: ontology | epistemology | threat-model | governance | math-core | protocol | parameters Created: YYYY-MM-DD Author: Name Sponsor: Optional --- # Abstract A short summary of the proposal. The abstract should describe the core idea in a concise and neutral form. --- # Motivation Explain the problem this proposal attempts to solve. Questions that should be addressed: Why is the current system insufficient? What risks or inefficiencies exist? Why is the proposed change necessary? --- # Specification This section contains the formal specification. It should include: precise definitions protocol rules mathematical expressions state transitions data structures Ambiguity should be avoided. --- # Rationale Explain the reasoning behind design decisions. Include trade-offs, rejected alternatives and design constraints. --- # Backward Compatibility Describe how the proposal interacts with existing protocol behavior. Questions to address: Does the proposal break existing assumptions? Are migrations required? Are compatibility layers needed? --- # Security Considerations Describe potential security implications. Examples: attack surfaces adversarial strategies failure scenarios abuse vectors Security analysis is mandatory for Standards Track proposals. --- # Threat Model Impact Explain how the proposal interacts with the system threat model. Questions: Does the proposal mitigate known threats? Does it introduce new attack vectors? Does it affect Sybil resistance, collusion detection or trust propagation? --- # Reference Implementation (Optional) If applicable, provide a prototype implementation. This may include: simulation code reference algorithms experimental modules --- # Simulation Evidence (Optional but Recommended) For proposals affecting trust computation or protocol behavior, include simulation results or analytical evaluation. Examples: network simulations adversarial stress tests performance measurements --- # Alternatives Considered List alternative approaches that were evaluated. Explain why the proposed solution was chosen. --- # Unresolved Questions List open issues or aspects requiring further research. --- # Decision Log Record major decisions during the review process. Include: date decision summary links to discussion threads --- # References List external references, research papers or prior work relevant to the proposal.
+# GCP-000: Template for Gravit Change Proposals
+
+**Status:** Draft | Proposed | Active | Replaced | Obsolete  
+**Author:** [Your Name / DID]  
+**Date:** YYYY-MM-DD  
+**Type:** Standards Track | Process | Informational  
+
+---
+
+## 1. Abstract
+
+A short (≤200 words) summary of the proposal. What problem does it solve? What is the proposed change?
+
+---
+
+## 2. Motivation
+
+Why is this change necessary? What are the current limitations or pain points? Provide concrete examples.
+
+---
+
+## 3. Specification
+
+### 3.1. Changes to the Standard
+Describe exactly what changes are being made to the VCP standard (RFC-0001, GQRVP, etc.). Reference specific sections.
+
+### 3.2. New Types / Endpoints
+If new data types or API endpoints are introduced, define them here with JSON schemas.
+
+### 3.3. Security Considerations
+How does this change affect the security model? Does it impact `η, γ, ε` parameters?
+
+---
+
+## 4. Backwards Compatibility
+
+Does this change break existing VCP-compatible systems? If so, what is the migration path?
+
+- [ ] No breaking changes
+- [ ] Breaking changes, with migration plan
+
+---
+
+## 5. Implementation
+
+- **Reference Implementation:** Link to PR or branch.
+- **Test Coverage:** How is this change validated?
+- **Simulation Results:** If applicable, attach `/experiments/results/` data.
+
+---
+
+## 6. Rationale & Alternatives
+
+Why was this design chosen over others? What alternatives were considered and rejected?
+
+---
+
+## 7. Open Questions
+
+Any unresolved issues or future extensions that might need to be addressed?
+
+---
+
+## 8. References
+
+- RFC-0001: Verifiable Convergence Protocol
+- GQRVP Security Model
+- [Other relevant documents]
+
+---
+
+## 9. Changelog
+
+| Version | Date | Author | Changes |
+| :--- | :--- | :--- | :--- |
+| 0.1 | YYYY-MM-DD | [Name] | Initial draft |
+
+---
+
+**Template maintained by Gravit Research. All proposals must use this format.**
