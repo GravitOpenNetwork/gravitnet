@@ -28,3 +28,14 @@ services:
       POSTGRES_USER: gravit
       POSTGRES_PASSWORD: gravit
       POSTGRES_DB: gravit
+
+  node:
+    build:
+      context: .
+      dockerfile: infra/docker/api.Dockerfile
+    environment:
+      - GRAVIT_ETA=0.2
+      - GRAVIT_GAMMA=1.5
+      - GRAVIT_EPSILON=0.1
+      - GRAVIT_NODE_ID=${NODE_ID:-node-1}
+
