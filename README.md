@@ -45,9 +45,9 @@ Gateway → Coordinator → SAIL → SCE → Trust Engine → Ω Trace Store
 
 ---
 
-## Status
+## **Status:**
 
-v1 — active system specification & implementation phase
+[VCP v0.1](specs/RFC/0001-vcp.md) — Internet-Draft ([draft-gravit-vcp-00](specs/IETF/draft-gravit-vcp-00.txt)).
 
 
 ## License
