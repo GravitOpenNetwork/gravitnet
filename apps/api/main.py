@@ -1,5 +1,4 @@
-import os
-from fastapi import FastAPI, Request
+from fastapi import FastAPI
 from routes.execute import router as execute_router
 from routes.vcp import router as vcp_router
 
@@ -12,31 +11,20 @@ def root():
     return {"status": "ok"}
 
 @app.get("/.well-known/vcp")
-def get_vcp_metadata(request: Request):
-    # Retrieve base URL dynamically (e.g., http://localhost:8000/ or https://testnet.gravit.space/)
-    base_url = str(request.base_url).rstrip("/")
-    
+def get_vcp_metadata():
+    import os
     return {
-        "subject": base_url,
+        "node_id": os.getenv("GRAVIT_NODE_ID", "node-1"),
         "vcp_version": "0.1",
-        "supported_methods": ["claim", "action/verify", "trace"],
+        "supported_methods": ["grover"],
         "endpoints": {
-            "claim": f"{base_url}/v1/claim",
-            "claim_get": f"{base_url}/v1/claim/{{claim_id}}",
-            "action_verify": f"{base_url}/v1/action/verify",
-            "trace": f"{base_url}/v1/trace/{{trace_id}}"
+            "claim": "/v1/claim",
+            "action_verify": "/v1/action/verify",
+            "trace": "/v1/trace"
         },
         "gqrvp_parameters": {
-            "learning_rate": float(os.getenv("GRAVIT_ETA", "0.2")),
-            "amplification": float(os.getenv("GRAVIT_GAMMA", "1.5")),
-            "mixing": float(os.getenv("GRAVIT_EPSILON", "0.1")),
-            "threshold": 0.7
-        },
-        "links": [
-            {
-                "rel": "https://gravit.network/vcp/schema/claim",
-                "href": f"{base_url}/schemas/claim.json",
-                "type": "application/schema+json"
-            }
-        ]
+            "eta": float(os.getenv("GRAVIT_ETA", "0.2")),
+            "gamma": float(os.getenv("GRAVIT_GAMMA", "1.5")),
+            "epsilon": float(os.getenv("GRAVIT_EPSILON", "0.1"))
+        }
     }
