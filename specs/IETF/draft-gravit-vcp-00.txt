@@ -74,6 +74,7 @@ Table of Contents
    8.  References  . . . . . . . . . . . . . . . . . . . . . . . . . .   7
      8.1.  Normative References  . . . . . . . . . . . . . . . . . . .   7
      8.2.  Informative References  . . . . . . . . . . . . . . . . . .   8
+   9.  Implementation Status (per RFC 7942)  . . . . . . . . . . . .   8
    Author's Address  . . . . . . . . . . . . . . . . . . . . . . . . .   8
 
 1.  Introduction
@@ -312,6 +313,26 @@ Table of Contents
               Protocol", 2026,
               <https://github.com/GravitOpenNetwork/gravitnet/
               blob/main/specs/RFC/0001-vcp.md>.
+
+9.  Implementation Status (per RFC 7942)
+
+   The reference implementation (`gravitnet`) provides:
+
+   - Implemented: VCP endpoints, in-memory state, discovery via
+     /.well-known/vcp.
+   - Not implemented: GQRVP MWU+Gossip convergence, signature
+     verification, cross-node state synchronization.
+   Testnet: A 50-node local cluster can be started using
+   scripts/start_testnet.sh.
+     - Nodes run in separate containers on a single host (or GitHub
+       Actions runner).
+     - Each node maintains its own isolated in-memory state.
+     - This demonstrates API-level interoperability, not a production
+       distributed consensus network.
+     - Full gossip-based synchronization is planned for version -01.
+
+   This testnet is a development and demonstration tool, not a
+   production deployment.
 
 Author's Address
 

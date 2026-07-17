@@ -1,22 +1,21 @@
 #!/bin/bash
-# EES VCP Testnet Launcher v0.1
-# Starts 50 Docker containers simulating the EES nodes.
-
+# Start 50 nodes in a single network (non-matrix!)
 set -e
 
-echo "🚀 Starting 50 EES VCP Testnet nodes..."
+echo "Starting 50-node VCP testnet..."
 for i in {1..50}; do
+  PORT=$((8000 + i - 1))
   NODE_ID="node-$i"
-  PORT=$((8000 + i))
-  
-  # Run the node container detached
-  # Map external port $PORT to internal FastAPI port 8000
-  NODE_ID="$NODE_ID" docker compose run -d \
+  echo "Starting $NODE_ID on port $PORT"
+  docker compose run -d \
     --name "gravit-node-$i" \
     --publish "$PORT:8000" \
     --env NODE_ID="$NODE_ID" \
+    --env GRAVIT_ETA=0.2 \
+    --env GRAVIT_GAMMA=1.5 \
+    --env GRAVIT_EPSILON=0.1 \
     node
 done
 
-echo "✅ Testnet with 50 nodes successfully deployed."
-echo "Nodes are accessible on http://localhost:8001 through http://localhost:8050"
+echo "✅ 50 nodes running. First node: http://localhost:8000"
+echo "Check /.well-known/vcp: curl http://localhost:8000/.well-known/vcp"

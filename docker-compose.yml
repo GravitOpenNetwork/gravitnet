@@ -38,4 +38,11 @@ services:
       - GRAVIT_GAMMA=1.5
       - GRAVIT_EPSILON=0.1
       - GRAVIT_NODE_ID=${NODE_ID:-node-1}
+    ports:
+      - "${PORT:-8000}:8000"
+    networks:
+      - gravitnet
 
+networks:
+  gravitnet:
+    driver: bridge
