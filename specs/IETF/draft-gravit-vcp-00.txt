@@ -8,15 +8,12 @@ Expires: 7 January 2027
 
 Abstract
 
-   This document specifies the Verifiable Convergence Protocol (VCP),
-   a minimal, transport-agnostic standard for submitting, verifying,
-   and tracing claims in distributed epistemic systems.
-
-   VCP defines four core endpoints (POST /claim, GET /claim/{id},
-   POST /action/verify, GET /trace/{id}) and the data types Claim,
-   Action, and Trace. It does not define consensus mechanisms,
-   tokenomics, or reputation systems. Any system implementing VCP
-   is an Epistemic Execution System (EES).
+   Verifiable Convergence Protocol (VCP) defines the minimal data
+   types and APIs required for autonomous agents and human-machine
+   systems to achieve epistemic convergence without centralized truth
+   arbiters. VCP is transport-agnostic, blockchain-agnostic, and
+   model-agnostic. Any system implementing VCP is an Epistemic
+   Execution System (EES).
 
    The protocol is designed to provide Byzantine resilience against
    Sybil attacks using the GQRVP (Gravit Quantum Resilient Verification
@@ -104,10 +101,8 @@ Table of Contents
 2.  Terminology
 
    The key words "MUST", "MUST NOT", "REQUIRED", "SHALL", "SHALL NOT",
-   "SHOULD", "SHOULD NOT", "RECOMMENDED", "NOT RECOMMENDED", "MAY",
-   and "OPTIONAL" in this document are to be interpreted as described
-   in BCP 14 [RFC2119] [RFC8174] when, and only when, they appear in
-   all capitals, as shown here.
+   "SHOULD", "SHOULD NOT", "RECOMMENDED", "MAY", and "OPTIONAL" in
+   this document are to be interpreted as described in RFC 2119.
 
    This document uses the following terms:
 
@@ -128,7 +123,7 @@ Table of Contents
    o  Confidence: A floating-point value between 0.0 and 1.0
       representing the network's belief in a Claim's veracity.
 
-3.  Core Data Types
+3.  Core Types
 
 3.1.  Claim
 
@@ -154,7 +149,7 @@ Table of Contents
 
 3.2.  Attestation
 
-   A cryptographic signature over a Claim by a DID.
+   Cryptographic signature over a Claim by a DID.
 
    {
      "attestation_id": "sha256:...",
@@ -285,7 +280,7 @@ Table of Contents
 
 7.  IANA Considerations
 
-   This document has no IANA actions.
+6.  Security Considerations
 
 8.  References
 
