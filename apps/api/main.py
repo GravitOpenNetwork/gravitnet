@@ -1,4 +1,5 @@
-from fastapi import FastAPI
+import os
+from fastapi import FastAPI, Request
 from routes.execute import router as execute_router
 from routes.vcp import router as vcp_router
 
@@ -11,8 +12,9 @@ def root():
     return {"status": "ok"}
 
 @app.get("/.well-known/vcp")
-def get_vcp_metadata():
-    import os
+def get_vcp_metadata(request: Request):
+    base_url = str(request.base_url).rstrip("/")
+    
     return {
         "node_id": os.getenv("GRAVIT_NODE_ID", "node-1"),
         "vcp_version": "0.1",
