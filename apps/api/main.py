@@ -9,3 +9,22 @@ app.include_router(vcp_router, prefix="/v1")
 @app.get("/")
 def root():
     return {"status": "ok"}
+
+@app.get("/.well-known/vcp")
+def get_vcp_metadata():
+    import os
+    return {
+        "node_id": os.getenv("GRAVIT_NODE_ID", "node-1"),
+        "vcp_version": "0.1",
+        "supported_methods": ["grover"],
+        "endpoints": {
+            "claim": "/v1/claim",
+            "action_verify": "/v1/action/verify",
+            "trace": "/v1/trace"
+        },
+        "gqrvp_parameters": {
+            "eta": float(os.getenv("GRAVIT_ETA", "0.2")),
+            "gamma": float(os.getenv("GRAVIT_GAMMA", "1.5")),
+            "epsilon": float(os.getenv("GRAVIT_EPSILON", "0.1"))
+        }
+    }

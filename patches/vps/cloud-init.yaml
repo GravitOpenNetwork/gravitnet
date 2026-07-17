@@ -1,0 +1,89 @@
+#cloud-config
+# cloud-init.yaml — first-boot provisioning for the VCP public testnet VPS.
+#
+# Usage: pass this file as "user data" when creating the VPS
+# (Hetzner Cloud, DigitalOcean, Scaleway all support this at creation time).
+# Replace REPLACE_ME_DOMAIN and REPLACE_ME_REPO before use.
+
+package_update: true
+package_upgrade: true
+
+packages:
+  - ca-certificates
+  - curl
+  - gnupg
+  - ufw
+  - git
+  - jq
+
+write_files:
+  # Caddy reverse-proxies HTTPS on the public domain to node-1 (localhost:8000).
+  # RFC 8615 requires /.well-known/vcp to be served over HTTPS — this is what
+  # gives us that, without hand-rolling certbot.
+  - path: /etc/caddy/Caddyfile
+    content: |
+      REPLACE_ME_DOMAIN {
+        reverse_proxy localhost:8000
+      }
+
+  # systemd unit that owns the testnet lifecycle: start on boot, clean
+  # teardown on stop, auto-restart if the process dies.
+  - path: /etc/systemd/system/gravitnet-testnet.service
+    content: |
+      [Unit]
+      Description=Gravit VCP Testnet (50-node local cluster)
+      After=docker.service network-online.target
+      Requires=docker.service
+      Wants=network-online.target
+
+      [Service]
+      Type=oneshot
+      RemainAfterExit=yes
+      WorkingDirectory=/opt/gravitnet
+      ExecStart=/opt/gravitnet/scripts/start_testnet_vps.sh
+      ExecStop=/opt/gravitnet/scripts/stop_testnet.sh
+      TimeoutStartSec=300
+      Restart=on-failure
+      RestartSec=10
+
+      [Install]
+      WantedBy=multi-user.target
+
+runcmd:
+  # --- Docker Engine (official repo, not distro package — needed for
+  # docker compose plugin v2 syntax used by start_testnet.sh) ---
+  - install -m 0755 -d /etc/apt/keyrings
+  - curl -fsSL https://download.docker.com/linux/ubuntu/gpg -o /etc/apt/keyrings/docker.asc
+  - chmod a+r /etc/apt/keyrings/docker.asc
+  - >
+    echo "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/docker.asc]
+    https://download.docker.com/linux/ubuntu $(. /etc/os-release && echo $VERSION_CODENAME) stable"
+    > /etc/apt/sources.list.d/docker.list
+  - apt-get update
+  - apt-get install -y docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin
+
+  # --- Caddy (automatic HTTPS via Let's Encrypt) ---
+  - apt-get install -y debian-keyring debian-archive-keyring apt-transport-https
+  - curl -1sLf 'https://dl.cloudsmith.io/public/caddy/stable/gpg.key' | gpg --dearmor -o /usr/share/keyrings/caddy-stable-archive-keyring.gpg
+  - >
+    curl -1sLf 'https://dl.cloudsmith.io/public/caddy/stable/debian.deb.txt'
+    -o /etc/apt/sources.list.d/caddy-stable.list
+  - apt-get update
+  - apt-get install -y caddy
+  - systemctl enable --now caddy
+  - systemctl reload caddy
+
+  # --- Firewall: SSH + HTTP/HTTPS for Caddy. Node ports 8001-8049 are
+  # intentionally NOT opened here — see start_testnet_vps.sh, they bind
+  # to 127.0.0.1 only by default (see DEPLOY_VPS.md for why). ---
+  - ufw allow OpenSSH
+  - ufw allow 80/tcp
+  - ufw allow 443/tcp
+  - ufw --force enable
+
+  # --- Clone the repo and start the testnet ---
+  - git clone REPLACE_ME_REPO /opt/gravitnet
+  - chmod +x /opt/gravitnet/scripts/start_testnet_vps.sh /opt/gravitnet/scripts/stop_testnet.sh
+  - cd /opt/gravitnet && docker compose build
+  - systemctl daemon-reload
+  - systemctl enable --now gravitnet-testnet.service
