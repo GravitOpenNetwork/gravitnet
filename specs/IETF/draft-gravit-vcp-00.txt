@@ -9,15 +9,12 @@ Expires: 7 January 2027
 
 Abstract
 
-   This document specifies the Verifiable Convergence Protocol (VCP),
-   a minimal, transport-agnostic standard for submitting, verifying,
-   and tracing claims in distributed epistemic systems.
-
-   VCP defines four core endpoints (POST /claim, GET /claim/{id},
-   POST /action/verify, GET /trace/{id}) and the data types Claim,
-   Action, and Trace. It does not define consensus mechanisms,
-   tokenomics, or reputation systems. Any system implementing VCP
-   is an Epistemic Execution System (EES).
+   Verifiable Convergence Protocol (VCP) defines the minimal data
+   types and APIs required for autonomous agents and human-machine
+   systems to achieve epistemic convergence without centralized truth
+   arbiters. VCP is transport-agnostic, blockchain-agnostic, and
+   model-agnostic. Any system implementing VCP is an Epistemic
+   Execution System (EES).
 
 Status of This Memo
 
@@ -50,9 +47,11 @@ Copyright Notice
 
 Table of Contents
 
-   1.  Introduction . . . . . . . . . . . . . . . . . . . . . . . . .  2
-   2.  Terminology & Conformance  . . . . . . . . . . . . . . . . . .  2
-   3.  Core Data Types  . . . . . . . . . . . . . . . . . . . . . . .  3
+   1.  Abstract & Introduction  . . . . . . . . . . . . . . . . . . .  2
+     1.1.  Abstract . . . . . . . . . . . . . . . . . . . . . . . . .  2
+     1.2.  Introduction . . . . . . . . . . . . . . . . . . . . . . .  2
+   2.  Terminology  . . . . . . . . . . . . . . . . . . . . . . . . .  2
+   3.  Core Types . . . . . . . . . . . . . . . . . . . . . . . . . .  3
      3.1.  Claim  . . . . . . . . . . . . . . . . . . . . . . . . . .  3
      3.2.  Attestation  . . . . . . . . . . . . . . . . . . . . . . .  3
      3.3.  Action . . . . . . . . . . . . . . . . . . . . . . . . . .  3
@@ -63,51 +62,51 @@ Table of Contents
      4.3.  POST /v1/action/verify . . . . . . . . . . . . . . . . . .  5
      4.4.  GET /v1/trace/{trace_id} . . . . . . . . . . . . . . . . .  5
      4.5.  GET /.well-known/vcp . . . . . . . . . . . . . . . . . . .  5
-   5.  GQRVP & Mathematical Specifications  . . . . . . . . . . . . .  5
-     5.1.  Protocol Constants . . . . . . . . . . . . . . . . . . . .  5
-     5.2.  Confidence Update Algorithm (MWU)  . . . . . . . . . . . .  6
-     5.3.  Quantum-Resilient Grover Step  . . . . . . . . . . . . . .  6
-   6.  Examples (Full Epistemic Flow) . . . . . . . . . . . . . . . .  7
-   7.  Interoperability & Reference Implementations . . . . . . . . .  7
-   8.  Privacy & Scalability Considerations . . . . . . . . . . . . .  8
-   9.  Security Considerations  . . . . . . . . . . . . . . . . . . .  8
-   10. IANA Considerations  . . . . . . . . . . . . . . . . . . . . .  9
-   11. References . . . . . . . . . . . . . . . . . . . . . . . . . .  9
-     11.1.  Normative References  . . . . . . . . . . . . . . . . . .  9
-     11.2.  Informative References  . . . . . . . . . . . . . . . . .  9
-   12. Implementation Status (per RFC 7942) . . . . . . . . . . . . .  10
-   Author's Address . . . . . . . . . . . . . . . . . . . . . . . . .  10
+   5.  Protocol Flow  . . . . . . . . . . . . . . . . . . . . . . . .  6
+   6.  Security Considerations  . . . . . . . . . . . . . . . . . . .  6
+   7.  IANA Considerations  . . . . . . . . . . . . . . . . . . . . .  6
+   8.  References . . . . . . . . . . . . . . . . . . . . . . . . . .  7
+   9.  Implementation Status (per RFC 7942) . . . . . . . . . . . . .  7
+   Author's Address . . . . . . . . . . . . . . . . . . . . . . . . .  7
 
-1.  Introduction
+1.  Abstract & Introduction
 
-   In the emerging ecosystem of autonomous software agents, achieving
-   shared agreement over factual claims is a key challenge. Distributed
-   agents must establish epistemic convergence without relying on single,
-   centralized authorities or resorting to heavy ledger-based consensus.
+1.1.  Abstract
 
-   The Verifiable Convergence Protocol (VCP) establishes a minimal,
-   transport-agnostic standard for submitting, verifying, and tracing
-   claims in decentralized systems. By representing claims, attestations,
-   and traces as content-addressed schemas, VCP enables autonomous
-   systems to evaluate confidence dynamically and audit decisions.
+   Verifiable Convergence Protocol (VCP) defines the minimal data
+   types and APIs required for autonomous agents and human-machine
+   systems to achieve epistemic convergence without centralized truth
+   arbiters. VCP is transport-agnostic, blockchain-agnostic, and
+   model-agnostic. Any system implementing VCP is an Epistemic
+   Execution System (EES).
 
-2.  Terminology & Conformance
+   The key invariant is that the cost of manipulating a Claim's
+   confidence exceeds the cost of validating it: C(manipulation) >
+   C(validation) for all Claim objects.
+
+1.2.  Introduction
+
+   As artificial intelligence transitions to autonomous agents capable
+   of independent actions, the lack of a standardized mechanism for
+   verifiable trust and epistemic convergence has become a critical
+   bottleneck. VCP addresses this by providing a minimal protocol for
+   claims, actions, and verifiable traces.
+
+2.  Terminology
 
    The key words "MUST", "MUST NOT", "REQUIRED", "SHALL", "SHALL NOT",
-   "SHOULD", "SHOULD NOT", "RECOMMENDED", "NOT RECOMMENDED", "MAY",
-   and "OPTIONAL" in this document are to be interpreted as described
-   in BCP 14 [RFC2119] [RFC8174] when, and only when, they appear in
-   all capitals, as shown here.
+   "SHOULD", "SHOULD NOT", "RECOMMENDED", "MAY", and "OPTIONAL" in
+   this document are to be interpreted as described in RFC 2119.
 
-   An Epistemic Execution System (EES) is VCP-Compatible if it:
-   1. Implements all core endpoints specified in Section 4.
-   2. Computes the network confidence of Claim objects using the GQRVP
-      update logic specified in Section 5.
-   3. Rejects Action proposals whose basis Claims do not meet the
-      minimum verification threshold (confidence >= 0.7).
-   4. Generates publicly auditable, content-addressed Trace records.
+   - Claim: Atomic unit of verifiable information.
+   - Action: Proposed state change grounded in Claims.
+   - Trace: Immutable record of verification.
+   - Discovery Document: JSON document returned by /.well-known/vcp for
+     auto-discovery.
+   - EES: Epistemic Execution System.
+   - GQRVP: Gravit Quantum Resilient Verification Protocol.
 
-3.  Core Data Types
+3.  Core Types
 
 3.1.  Claim
 
@@ -124,7 +123,7 @@ Table of Contents
        }
      ],
      "method": "string",
-     "confidence": "float",
+     "confidence": "float 0.0-1.0",
      "created_at": "RFC3339 timestamp",
      "expires": "RFC3339 timestamp",
      "trace": ["claim_id"]
@@ -132,7 +131,7 @@ Table of Contents
 
 3.2.  Attestation
 
-   A cryptographic signature over a Claim by a DID.
+   Cryptographic signature over a Claim by a DID.
 
    {
      "attestation_id": "sha256:...",
@@ -143,7 +142,7 @@ Table of Contents
 
 3.3.  Action
 
-   A proposed state change that MUST be grounded in basis Claims.
+   A proposed state change that MUST be grounded in Claims.
 
    {
      "action_id": "sha256:...",
@@ -156,7 +155,7 @@ Table of Contents
 
 3.4.  Trace
 
-   An immutable record of all validation results applied to an Action.
+   Immutable record of verification.
 
    {
      "trace_id": "sha256:...",
@@ -171,23 +170,23 @@ Table of Contents
 
 4.  Core Endpoints
 
-   All endpoints MUST be served over HTTPS. Requests and responses MUST
-   use the "application/json" media type.
+   All endpoints MUST be served over HTTPS. Request and response bodies
+   are application/json.
 
 4.1.  POST /v1/claim
 
-   Submits a new Claim for verification.
-   * Request: A Claim object omitting claim_id and confidence.
+   Submit a new Claim for verification.
+   * Request: Claim object without claim_id, confidence.
    * Response 201: {"claim_id": "sha256:..."}
    * Response 400: {"error": "Invalid Claim schema"}
 
 4.2.  GET /v1/claim/{claim_id}
 
-   Retrieves a Claim and its current network confidence.
+   Retrieve a Claim and its current network confidence.
    * Response 200:
      {
        "claim": Claim,
-       "confidence": float,
+       "confidence": 0.92,
        "attestations": Attestation[],
        "merkle_proof": "bytes"
      }
@@ -195,201 +194,88 @@ Table of Contents
 
 4.3.  POST /v1/action/verify
 
-   Verifies whether a proposed Action is permitted given its basis.
-   * Request: An Action object.
+   Verify if an Action is permitted given its basis Claims.
+   * Request: Action object.
    * Response 200:
      {
        "status": "ACCEPTED|REJECTED",
        "trace_id": "sha256:...",
        "reason": "string"
      }
-   * Rule: The gateway MUST reject the Action if basis is empty, if any
-     basis claim_id does not exist, or if any basis Claim has a
+   * Rule: Gateway MUST reject if basis is empty or any claim_id has
      confidence < 0.7.
 
 4.4.  GET /v1/trace/{trace_id}
 
-   Retrieves the immutable verification history for an Action.
-   * Response 200: A Trace object.
+   Retrieve immutable verification history for an Action.
+   * Response 200: Trace object.
    * Response 404: {"error": "Trace not found"}
 
 4.5.  GET /.well-known/vcp
 
-   Root-level discovery endpoint (RFC 8615).
-   * Response 200:
-     {
-       "subject": "did:gravit:node-1",
-       "vcp_version": "0.1",
-       "supported_methods": ["grover"],
-       "endpoints": {
-         "claim": "https://testnet.gravit.space/v1/claim",
-         "action_verify": "https://testnet.gravit.space/v1/action/verify",
-         "trace": "https://testnet.gravit.space/v1/trace/{trace_id}"
-       },
-       "gqrvp_parameters": {
-         "eta": 0.2,
-         "gamma": 1.5,
-         "epsilon": 0.1
+   Purpose: Returns the Discovery Document allowing clients to
+   automatically discover capabilities, version, and endpoint locations
+   of a VCP-compatible node.
+
+   Successful Response (200 OK):
+   {
+     "subject": "https://node.example.com",
+     "vcp_version": "0.1",
+     "supported_methods": ["claim", "action/verify", "trace"],
+     "endpoints": {
+       "claim": "https://node.example.com/v1/claim",
+       "claim_get": "https://node.example.com/v1/claim/{claim_id}",
+       "action_verify": "https://node.example.com/v1/action/verify",
+       "trace": "https://node.example.com/v1/trace/{trace_id}"
+     },
+     "gqrvp_parameters": {
+       "learning_rate": 0.2,
+       "amplification": 1.5,
+       "mixing": 0.1,
+       "threshold": 0.7
+     },
+     "links": [
+       {
+         "rel": "https://gravit.network/vcp/schema/claim",
+         "href": "https://node.example.com/schemas/claim.json",
+         "type": "application/schema+json"
        }
-     }
-
-5.  GQRVP & Mathematical Specifications
-
-   The Gravit Quantum Resilient Verification Protocol (GQRVP) models
-   agent consensus as a game of Multiplicative Weights Update (MWU)
-   with Grover Amplification.
-
-5.1.  Protocol Constants
-
-   VCP-Compatible implementations MUST adhere to the following:
-   * Learning Rate (eta): 0.2 (Controls speed of updates; prevents
-     flip-flopping).
-   * Amplification Exponent (gamma): 1.5 (Exaggerates consensus signal,
-     dampening random noise).
-   * Mixing Ratio (eps): 0.1 (Prevents cluster isolation in gossip).
-
-5.2.  Confidence Update Algorithm (MWU)
-
-   def update_node_weights(nodes, outcome_losses, eta=0.2):
-       """
-       Update weights of consensus nodes based on performance.
-       """
-       total_weight = 0.0
-       for node in nodes:
-           loss = outcome_losses.get(node.id, 0.0)
-           node.weight = node.weight * (1.0 - eta * loss)
-           total_weight += node.weight
-       if total_weight > 0:
-           for node in nodes:
-               node.weight /= total_weight
-
-5.3.  Quantum-Resilient Grover Step
-
-   def compute_amplified_consensus(node_votes, weights, gamma=1.5):
-       """
-       Apply amplification to consensus weights.
-       """
-       positive_weight = 0.0
-       total_weight = 0.0
-       for node_id, vote in node_votes.items():
-           weight = weights.get(node_id, 0.0)
-           total_weight += weight
-           if vote == "VALID":
-               positive_weight += weight
-       if total_weight == 0:
-           return 0.0
-       ratio = positive_weight / total_weight
-       amplified = ((ratio ** gamma) /
-                    ((ratio ** gamma) + ((1.0 - ratio) ** gamma)))
-       return amplified
-
-6.  Examples (Full Epistemic Flow)
-
-   Step 1: Submit Claim to Node 1
-   Request: POST /v1/claim
-   {
-     "content": "Oracle transaction 0xab92 is valid",
-     "provenance": [{"type": "url", "src": "https://..."}],
-     "method": "grover",
-     "expires": "2026-12-31T23:59:59Z"
-   }
-   Response 201 Created: {"claim_id": "sha256:d8a9e2f1..."}
-
-   Step 2: Propose Action based on the Claim
-   Request: POST /v1/action/verify
-   {
-     "name": "release_escrow",
-     "params": {"recipient": "did:...", "amount": 500},
-     "basis": ["sha256:d8a9e2f1..."],
-     "stake": 100,
-     "proposed_by": "did:..."
-   }
-   Response 200 OK:
-   {
-     "status": "ACCEPTED",
-     "trace_id": "sha256:ee041b3a...",
-     "reason": "All basis claims successfully verified with confidence >= 0.7"
+     ]
    }
 
-   Step 3: Retrieve Validation Trace
-   Request: GET /v1/trace/sha256:ee041b3a...
-   Response 200 OK:
-   {
-     "trace_id": "sha256:ee041b3a...",
-     "action_id": "sha256:f12a99d4...",
-     "result": "ACCEPTED",
-     "reason": "All basis claims successfully verified with confidence >= 0.7",
-     "final_confidence": 0.85,
-     "gqrvp_rounds": 14,
-     "timestamp": "2026-07-17T13:45:00Z",
-     "merkle_root": "59a3ee02..."
-   }
+5.  Protocol Flow
 
-7.  Interoperability & Reference Implementations
+   1. Agent submits Claim -> system computes confidence via GQRVP.
+   2. Agent proposes Action with basis Claims.
+   3. System verifies and returns Trace.
 
-   VCP-Compatible systems rely on two distinct reference implementations:
-   * graviteron: An agent runtime host implementing local state stores
-     and evaluating GQRVP consensus updates.
-   * verifier: An auxiliary microservice that checks Attestation
-     signatures and produces auditable cryptographic Trace records.
+6.  Security Considerations
 
-8.  Privacy & Scalability Considerations
+   VCP guarantees that the cost of manipulating a Claim's confidence
+   exceeds the cost of validating it.
 
-8.1.  Off-Chain Data Storage
+   Discovery Endpoint:
+   - Implementations SHOULD apply rate limiting (e.g., 10-30 requests
+     per minute per IP).
+   - Authentication is OPTIONAL for public nodes but RECOMMENDED for
+     private ones.
+   - The document MUST NOT expose sensitive data.
 
-   To support scalability and satisfy data privacy compliance (e.g.,
-   GDPR), Claim content and provenance metadata SHOULD be stored in
-   decentralized content-addressed networks (IPFS, Arweave), while the
-   VCP Claim structure retains only the cryptographic hashes.
+   General:
+   - All endpoints MUST use HTTPS.
+   - Quantum readiness via PQC where applicable.
 
-8.2.  Epistemic Sharding
+7.  IANA Considerations
 
-   Rather than computing MWU updates globally across all EES nodes,
-   networks SHOULD partition convergence tasks into domain-specific
-   sharding structures. Each shard evaluates sub-networks of related
-   Claims, minimizing global message overhead.
+   - Media Type: application/vcp+json
+   - Well-Known URI: vcp
 
-8.3.  Zero-Knowledge Attestations
+8.  References
 
-   Future extensions of VCP plan to allow nodes to submit anonymous
-   signatures using Zero-Knowledge Proofs (ZKPs) to assert validation
-   status without revealing the voting identity or specific stake
-   weights of individual nodes.
+   - Gravit Triad Model
+   - GQRVP Formal Model
 
-9.  Security Considerations
-
-   VCP establishes that the cost of manipulating a Claim's confidence
-   exceeds the reward, provided that the network's stake-weighted
-   attention maintains an honest supermajority.
-
-   Without authentication, endpoints /v1/claim and /v1/action/verify
-   are vulnerable to spam and Sybil manipulation if exposed directly
-   to the public internet. VCP-Compatible gateways MUST protect these
-   routes with transport layer filters or rate limiters.
-
-10. IANA Considerations
-
-   This document has no IANA actions.
-
-11. References
-
-11.1.  Normative References
-
-   [RFC2119] Bradner, S., "Key words for use in RFCs to Indicate
-             Requirement Levels", BCP 14, RFC 2119, March 1997.
-
-   [RFC8174] Leiba, B., "Ambiguity of Uppercase vs Lowercase in RFC 2119
-             Key Words", BCP 14, RFC 8174, May 2017.
-
-   [RFC8615] Nottingham, M., "Well-Known Uniform Resource Identifiers
-             (URIs)", RFC 8615, May 2019.
-
-11.2.  Informative References
-
-   [GQRVP-SECURITY] Gravit Research, "GQRVP Security Model: Sybil and
-             Amplification Resistance", 2026.
-
-12.  Implementation Status (per RFC 7942)
+9.  Implementation Status (per RFC 7942)
 
    The reference implementation (gravitnet) provides:
    - Implemented: VCP endpoints, in-memory state, discovery via
