@@ -12,13 +12,15 @@ jobs:
 
       - name: Start 50-node testnet
         run: |
-          export GRAVIT_ETA=0.2 GRAVIT_GAMMA=1.5 GRAVIT_EPSILON=0.1
           for i in {1..50}; do
-            NODE_ID="node-$i" \
+            PORT=$((8000 + i - 1))
             docker compose run -d \
               --name "gravit-node-$i" \
-              --network gravitnet_default \
+              --publish "$PORT:8000" \
               --env NODE_ID="node-$i" \
+              --env GRAVIT_ETA=0.2 \
+              --env GRAVIT_GAMMA=1.5 \
+              --env GRAVIT_EPSILON=0.1 \
               node
           done
 
