@@ -1,4 +1,6 @@
 import hashlib
+import json
+import os
 from datetime import datetime
 from fastapi import APIRouter, HTTPException, status
 from typing import Dict, Any, List
@@ -11,6 +13,14 @@ router = APIRouter()
 claims_db: Dict[str, Dict[str, Any]] = {}
 traces_db: Dict[str, Dict[str, Any]] = {}
 attestations_db: Dict[str, List[Dict[str, Any]]] = {}
+
+# --- Named constants per draft-konviser-vcp-00 ---
+# θ_critical from Appendix B: formal-to-epistemic transition point
+# See sybil-10x-g1.5.json empirical analysis
+THETA_CRITICAL = float(os.getenv("GRAVIT_THETA_CRITICAL", "0.731"))
+
+# Initial confidence prior pending GQRVP convergence (see §9 Implementation Status)
+INITIAL_CLAIM_CONFIDENCE = float(os.getenv("GRAVIT_INITIAL_CONFIDENCE", "0.85"))
 
 @router.post("/claim", status_code=status.HTTP_201_CREATED)
 def create_claim(claim: Claim):
@@ -28,13 +38,13 @@ def create_claim(claim: Claim):
         
     created_time = datetime.utcnow().isoformat() + "Z"
     
-    # Store claim with network confidence defaults (derived from GQRVP simulation average)
+    # Store claim with network confidence defaults (static prior, not MWU convergence yet)
     claims_db[claim_id] = {
         "claim_id": claim_id,
         "content": claim.content,
         "provenance": [p.dict() for p in claim.provenance],
         "method": claim.method,
-        "confidence": 0.85,  # initial stake-weighted convergence confidence
+        "confidence": INITIAL_CLAIM_CONFIDENCE,
         "created_at": created_time,
         "expires": claim.expires or (datetime.utcnow().isoformat() + "Z"),
         "trace": claim.trace or []
@@ -82,19 +92,17 @@ def verify_action(action: Action):
     action_id = f"sha256:{action_hash}"
     trace_id = f"sha256:{hashlib.sha256(action_id.encode()).hexdigest()}"
 
-    # Gateway rule 3: Reject if any basis claim confidence < 0.7
+    # Gateway rule 3: Reject if any basis claim confidence < θ_critical
     for claim in basis_claims:
-        if claim["confidence"] < 0.7:
-            trace_data = {
-                "trace_id": trace_id,
-                "action_id": action_id,
-                "result": "REJECTED",
-                "reason": f"Basis claim {claim['claim_id']} confidence ({claim['confidence']}) is below required threshold (0.7)",
-                "final_confidence": claim["confidence"],
-                "gqrvp_rounds": 0,
-                "timestamp": datetime.utcnow().isoformat() + "Z",
-                "merkle_root": hashlib.sha256(trace_id.encode()).hexdigest()
-            }
+        if claim["confidence"] < THETA_CRITICAL:
+            trace_data = _build_trace(
+                trace_id,
+                action_id,
+                "REJECTED",
+                f"Basis claim {claim['claim_id']} confidence ({claim['confidence']}) is below required threshold ({THETA_CRITICAL})",
+                claim["confidence"],
+                gqrvp_rounds=0
+            )
             traces_db[trace_id] = trace_data
             
             return {
@@ -105,16 +113,14 @@ def verify_action(action: Action):
             
     # Success path: All checks pass
     avg_confidence = sum([c["confidence"] for c in basis_claims]) / len(basis_claims)
-    trace_data = {
-        "trace_id": trace_id,
-        "action_id": action_id,
-        "result": "ACCEPTED",
-        "reason": "All basis claims successfully verified with confidence >= 0.7",
-        "final_confidence": avg_confidence,
-        "gqrvp_rounds": 14,  # Convergence round count matching GQRVP security model
-        "timestamp": datetime.utcnow().isoformat() + "Z",
-        "merkle_root": hashlib.sha256(trace_id.encode()).hexdigest()
-    }
+    trace_data = _build_trace(
+        trace_id,
+        action_id,
+        "ACCEPTED",
+        f"All basis claims successfully verified with confidence >= {THETA_CRITICAL}",
+        avg_confidence,
+        gqrvp_rounds=None  # Not computed by reference node; pending -01 (see §9)
+    )
     traces_db[trace_id] = trace_data
     
     return {
@@ -122,6 +128,26 @@ def verify_action(action: Action):
         "trace_id": trace_id,
         "reason": trace_data["reason"]
     }
+
+def _build_trace(trace_id, action_id, result, reason, final_confidence, gqrvp_rounds):
+    """Build trace with content-addressed merkle_root (RFC 6962 style).
+    
+    Hash is computed over the full trace body as JSON, not just trace_id,
+    ensuring the Trace is immutable and verifiable.
+    """
+    trace_body = {
+        "trace_id": trace_id,
+        "action_id": action_id,
+        "result": result,
+        "reason": reason,
+        "final_confidence": final_confidence,
+        "gqrvp_rounds": gqrvp_rounds,
+        "timestamp": datetime.utcnow().isoformat() + "Z",
+    }
+    # Merkle root: hash of canonical JSON representation (see §4.4)
+    canonical = json.dumps(trace_body, sort_keys=True).encode()
+    trace_body["merkle_root"] = hashlib.sha256(canonical).hexdigest()
+    return trace_body
 
 @router.get("/trace/{trace_id}")
 def get_trace(trace_id: str):
