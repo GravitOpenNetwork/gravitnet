@@ -1,10 +1,26 @@
 # Gravit Open Network
-![IETF](https://img.shields.io/badge/IETF-draft--gravit--vcp--00-Posted-success) ![VCP](https://img.shields.io/badge/VCP-v0.1-0A66C2)
-[![IETF Draft Posted](https://img.shields.io/badge/IETF%20Datatracker-Posted-brightgreen?style=for-the-badge&logo=ietf)](https://datatracker.ietf.org/doc/draft-gravit-vcp/)
-[![Version](https://img.shields.io/badge/Version-00-blue?style=for-the-badge)](https://www.ietf.org/archive/id/draft-gravit-vcp-00.txt)
-[![SCITT Compatible](https://img.shields.io/badge/SCITT-Compatible-blue?style=flat-square)](https://datatracker.ietf.org/doc/draft-gravit-vcp/)
-[![Status: Individual Submission](https://img.shields.io/badge/Status-Individual%20Submission-orange?style=flat-square)](https://datatracker.ietf.org/doc/draft-gravit-vcp/)
+# Gravit Open Network
 
+[![IETF DATATRACKER POSTED](https://img.shields.io/badge/IETF%20DATATRACKER-POSTED-2ea44f?style=for-the-badge)](https://datatracker.ietf.org/doc/draft-gravit-vcp/)
+[![VERSION 00](https://img.shields.io/badge/VERSION-00-0A66C2?style=for-the-badge)](https://www.ietf.org/archive/id/draft-gravit-vcp-00.txt)
+[![VCP v0.1](https://img.shields.io/badge/VCP-v0.1-0A66C2?style=flat-square)](https://datatracker.ietf.org/doc/draft-gravit-vcp/)
+[![SCITT Compatible](https://img.shields.io/badge/SCITT-Compatible-blue?style=flat-square)](https://datatracker.ietf.org/doc/draft-gravit-vcp/)
+[![Status Individual Submission](https://img.shields.io/badge/Status-Individual%20Submission-orange?style=flat-square)](https://datatracker.ietf.org/doc/draft-gravit-vcp/)
+
+### 📜 IETF Internet-Draft: draft-gravit-vcp-00 - Verifiable Convergence Protocol (VCP) v0.1
+
+**Posted: 2026-07-20 | Author: Dr. Alex Konviser**
+
+> Verifiable Convergence Protocol defines minimal data types and APIs for autonomous agents to achieve epistemic convergence without centralized truth arbiters. The key invariant: `C(manipulation) > C(validation)` for all Claim objects.
+
+**Official Links:**
+- **Datatracker:** https://datatracker.ietf.org/doc/draft-gravit-vcp/
+- **TXT:** https://www.ietf.org/archive/id/draft-gravit-vcp-00.txt
+- **HTML:** https://www.ietf.org/archive/id/draft-gravit-vcp-00.html
+- **HTMLized:** https://datatracker.ietf.org/doc/html/draft-gravit-vcp
+- **XML Source:** /specs/IETF/draft-gravit-vcp-00.xml
+
+**Invariant:** `C(manipulation) > C(validation)` | **Threshold:** `θ_critical = 0.731` | **Resilience:** `67% Byzantine (GQRVP: η=0.2, γ=1.5, ε=0.1)`
 ### 📜 IETF Internet-Draft: draft-gravit-vcp-00 - Verifiable Convergence Protocol (VCP) v0.1
 
 **Posted: 2026-07-20 | Author: Dr. Alex Konviser**
