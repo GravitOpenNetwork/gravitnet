@@ -11,10 +11,10 @@
           <region>Zürich</region>
           <country>Switzerland</country>
         </postal>
-        <email>alex@gravitopennetwork.org</email>
+        <email>ietf@gravit.space</email>
       </address>
     </author>
-    <date year="2026" month="July" day="18"/>
+    <date year="2026" month="July" day="20"/>
     <area>General</area>
     <workgroup>Internet Engineering Task Force</workgroup>
     <keyword>VCP</keyword>
@@ -159,7 +159,7 @@
   "reason": "string"
 }
 ]]></sourcecode>
-        <t>Gateway MUST reject if basis is empty or any claim_id has confidence &lt; 0.7.</t>
+        <t>Gateway MUST reject if basis is empty or any claim_id has confidence &lt; 0.731.</t>
       </section>
 
       <section anchor="get-trace" title="GET /v1/trace/{trace_id}">
