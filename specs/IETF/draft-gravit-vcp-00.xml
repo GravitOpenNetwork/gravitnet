@@ -1,127 +1,73 @@
-?xml version="1.0" encoding="UTF-8"?>
-<rfc docName="draft-gravit-vcp-00" submissionType="IETF" category="info" ipr="trust200902" version="3" xml:lang="en">
+<?xml version="1.0" encoding="utf-8"?>
+<rfc category="info" docName="draft-gravit-vcp-00" ipr="trust200902" submissionType="IETF" version="3" xml:lang="en">
   <front>
     <title abbrev="VCP">Verifiable Convergence Protocol (VCP) v0.1</title>
     <seriesInfo name="Internet-Draft" value="draft-gravit-vcp-00"/>
     <author fullname="Dr. Alex Konviser">
       <organization>Gravit Open Network Foundation</organization>
       <address>
-        <postal><city>Zürich</city><country>Switzerland</country></postal>
+        <postal>
+          <city>Zürich</city>
+          <country>Switzerland</country>
+        </postal>
         <email>ietf@gravit.space</email>
       </address>
     </author>
-    <date year="2026" month="July" day="20"/>
+    <date day="20" month="07" year="2026"/>
     <area>sec</area>
     <workgroup>SCITT</workgroup>
     <keyword>VCP</keyword>
     <keyword>GQRVP</keyword>
     <abstract>
-      <t>Verifiable Convergence Protocol (VCP) defines minimal data types and APIs for autonomous agents and human-machine systems to achieve epistemic convergence without centralized truth arbiters. VCP is transport-agnostic, blockchain-agnostic, and model-agnostic. Any system implementing VCP is an Epistemic Execution System (EES).</t>
-      <t>The key invariant: C(manipulation) &gt; C(validation) for all Claim objects.</t>
+      <t>Verifiable Convergence Protocol (VCP) defines minimal data types and APIs for autonomous agents to achieve epistemic convergence without centralized truth arbiters. VCP is transport-agnostic, blockchain-agnostic, and model-agnostic. The key invariant: C(manipulation) &gt; C(validation) for all Claim objects.</t>
     </abstract>
   </front>
   <middle>
-    <section anchor="introduction">
+    <section anchor="intro">
       <name>Introduction</name>
-      <t>As artificial intelligence transitions to autonomous agents capable of independent actions, the lack of a standardized mechanism for verifiable trust and epistemic convergence has become a critical bottleneck. VCP addresses this by providing a minimal protocol for claims, actions, and verifiable traces.</t>
-      <t>The key invariant is that the cost of manipulating a Claim's confidence exceeds the cost of validating it: C(manipulation) &gt; C(validation).</t>
+      <t>As AI transitions to autonomous agents, lack of verifiable trust is a bottleneck. VCP provides minimal protocol for claims, actions, and traces.</t>
     </section>
     <section anchor="conformance">
       <name>Conformance</name>
-      <t>A system is VCP-Compatible iff:</t>
-      <ol>
-        <li><t>It implements the 4 Core Endpoints in Section 4.</t></li>
-        <li><t>Confidence for all Claims is computed via Multiplicative Weights Update plus Gossip Consensus as defined in Section 5 (GQRVP).</t></li>
-        <li><t>All Action objects reference Claim as basis. Actions without basis MUST be rejected at Gateway.</t></li>
-        <li><t>Trace is immutable, content-addressed, and publicly auditable.</t></li>
-      </ol>
+      <t>A system is VCP-Compatible iff it implements 4 Core Endpoints, confidence via MWU plus Gossip as per GQRVP, Actions reference Claim as basis, and Trace is immutable and content-addressed.</t>
     </section>
-    <section anchor="core-types">
+    <section anchor="types">
       <name>Core Types</name>
-      <section anchor="claim">
-        <name>Claim</name>
-        <t>The atomic unit of verifiable information.</t>
-        <t><sourcecode type="json"><![CDATA[{
-  "claim_id": "sha256:...",
-  "content": "string",
-  "provenance": [{"type": "url", "src": "string", "signed_by": "did:..."}],
-  "confidence": "float 0.0-1.0",
-  "created_at": "RFC3339",
-  "trace": ["claim_id"]
-}]]></sourcecode></t>
-      </section>
-      <section anchor="completeness">
-        <name>Formal Completeness Boundary</name>
-        <t>Formal-to-epistemic transition threshold: theta_critical = 0.731. When confidence is greater than or equal to threshold, system may treat result as formally sufficient. When below, SHOULD escalate to Continuum-style semantic verification.</t>
-        <t>Empirical sybil-10x-g1.5 trace: 30 scores extracted, 0 below, 30 above threshold. Consistent with Godel-grounded design.</t>
-      </section>
-      <section anchor="attestation">
-        <name>Attestation</name>
-        <t>Cryptographic signature over a Claim by a DID.</t>
-        <t><sourcecode type="json"><![CDATA[{
-  "attestation_id": "sha256:...",
-  "claim_id": "sha256:...",
-  "issuer": "did:...",
-  "signature": "bytes"
-}]]></sourcecode></t>
-      </section>
-      <section anchor="action">
-        <name>Action</name>
-        <t>A proposed state change grounded in Claims.</t>
-        <t><sourcecode type="json"><![CDATA[{
-  "action_id": "sha256:...",
-  "name": "string",
-  "basis": ["claim_id"],
-  "stake": "uint",
-  "proposed_by": "did:..."
-}]]></sourcecode></t>
-      </section>
-      <section anchor="trace">
-        <name>Trace</name>
-        <t>Immutable record of verification.</t>
-        <t><sourcecode type="json"><![CDATA[{
-  "trace_id": "sha256:...",
-  "action_id": "sha256:...",
-  "result": "ACCEPTED",
-  "final_confidence": "float",
-  "merkle_root": "bytes"
-}]]></sourcecode></t>
-      </section>
+      <t>Claim is atomic unit: claim_id, content, provenance, confidence 0.0-1.0, trace.</t>
+      <t>Attestation is signature over Claim by DID.</t>
+      <t>Action is state change grounded in Claims. Gateway MUST reject if basis empty or confidence less than 0.731.</t>
+      <t>Trace is immutable record with final_confidence and merkle_root.</t>
+      <t>Formal-to-epistemic threshold theta_critical equals 0.731. Empirical sybil-10x-g1.5 trace shows 30 scores above threshold.</t>
     </section>
     <section anchor="endpoints">
       <name>Core Endpoints</name>
-      <t>All endpoints MUST be served over HTTPS. Bodies are application/json.</t>
-      <section anchor="post-claim"><name>POST /v1/claim</name><t>Submit new Claim. Request: Claim without claim_id. Response 201: claim_id. 400: Invalid schema.</t></section>
-      <section anchor="get-claim"><name>GET /v1/claim/{claim_id}</name><t>Retrieve Claim and current confidence. Response 200: claim, confidence, attestations, merkle_proof. 404: Not found.</t></section>
-      <section anchor="post-verify"><name>POST /v1/action/verify</name><t>Verify Action. Request: Action. Response 200: status ACCEPTED or REJECTED, trace_id, reason. Gateway MUST reject if basis empty or confidence less than 0.731.</t></section>
-      <section anchor="get-trace"><name>GET /v1/trace/{trace_id}</name><t>Retrieve immutable history. 200: Trace. 404: Not found.</t></section>
+      <t>POST /v1/claim, GET /v1/claim/{id}, POST /v1/action/verify, GET /v1/trace/{id} over HTTPS, application/json.</t>
     </section>
     <section anchor="gqrvp">
       <name>GQRVP Security Parameters</name>
-      <t>To prevent Sybil and amplification attacks, VCP-Compatible implementations MUST use eta=0.2, gamma=1.5, eps=0.1. Formal proof of 67 percent Byzantine resilience under these parameters is given in /specs/RFC/GQRVP-security.md.</t>
+      <t>MUST use eta equals 0.2, gamma equals 1.5, eps equals 0.1. Provides 67 percent Byzantine resilience.</t>
     </section>
     <section anchor="iana">
       <name>IANA Considerations</name>
-      <t>This document has no IANA actions.</t>
+      <t>No actions.</t>
     </section>
     <section anchor="security">
       <name>Security Considerations</name>
-      <t>VCP does not resolve conflicts caused by asymmetry of goals. VCP guarantees that cost of manipulating confidence exceeds cost of validating it, given honest supermajority of stake-weighted attention.</t>
+      <t>VCP guarantees cost of manipulation exceeds cost of validation given honest supermajority.</t>
     </section>
   </middle>
   <back>
     <references>
       <name>References</name>
       <reference anchor="FOUNDATIONS">
-        <front><title>Gravit Epistemic Foundations</title>
-        <author><organization>Gravit Open Network Foundation</organization></author>
-        <date year="2026"/>
+        <front>
+          <title>Gravit Epistemic Foundations</title>
+          <author>
+            <organization>Gravit Open Network Foundation</organization>
+          </author>
+          <date year="2026"/>
         </front>
       </reference>
     </references>
-    <section anchor="appendix-b">
-      <name>Appendix B: Godel and theta_critical</name>
-      <t>Threshold theta_critical=0.731 is practical boundary between formal sufficiency and semantic escalation, grounded in Godel's Second Incompleteness Theorem. In sybil-10x-g1.5 trace: 30 scores, 0 below, 30 above threshold. Demonstrates stable high-confidence convergence.</t>
-    </section>
   </back>
 </rfc>
