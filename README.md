@@ -57,7 +57,7 @@ Permissive for research, modification, integration — protective against pure c
 
 ## Related Links
 
-- 🌐 Website: https://gravitnetwork.org
+- 🌐 Website: https://gravit.space
 - 📬 Substack: https://gravitopennetworkfoundation.substack.com
 - 🐦 X: [@GravitNet](https://x.com/GravitNet) · [@bensaufer](https://x.com/bensaufer)
 - 📜 Documentation & litepaper: in progress (watch repo & Substack)
