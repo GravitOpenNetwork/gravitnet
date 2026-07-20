@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="UTF-8"?>
+?xml version="1.0" encoding="UTF-8"?>
 <rfc docName="draft-gravit-vcp-00" submissionType="IETF" category="info" ipr="trust200902" version="3" xml:lang="en">
   <front>
     <title abbrev="VCP">Verifiable Convergence Protocol (VCP) v0.1</title>
@@ -13,97 +13,115 @@
     <date year="2026" month="July" day="20"/>
     <area>sec</area>
     <workgroup>SCITT</workgroup>
-    <keyword>VCP</keyword><keyword>GQRVP</keyword><keyword>Epistemic Convergence</keyword>
+    <keyword>VCP</keyword>
+    <keyword>GQRVP</keyword>
     <abstract>
-      <t>Verifiable Convergence Protocol (VCP) defines the minimal data types and APIs required for autonomous agents and human-machine systems to achieve epistemic convergence without centralized truth arbiters. VCP is transport-agnostic, blockchain-agnostic, and model-agnostic. Any system implementing VCP is an Epistemic Execution System (EES).</t>
+      <t>Verifiable Convergence Protocol (VCP) defines minimal data types and APIs for autonomous agents and human-machine systems to achieve epistemic convergence without centralized truth arbiters. VCP is transport-agnostic, blockchain-agnostic, and model-agnostic. Any system implementing VCP is an Epistemic Execution System (EES).</t>
       <t>The key invariant: C(manipulation) &gt; C(validation) for all Claim objects.</t>
     </abstract>
   </front>
   <middle>
-    <section anchor="introduction"><name>Introduction</name>
+    <section anchor="introduction">
+      <name>Introduction</name>
       <t>As artificial intelligence transitions to autonomous agents capable of independent actions, the lack of a standardized mechanism for verifiable trust and epistemic convergence has become a critical bottleneck. VCP addresses this by providing a minimal protocol for claims, actions, and verifiable traces.</t>
-      <t>The key invariant is that the cost of manipulating a Claim's confidence exceeds the cost of validating it for all Claim objects: C(manipulation) &gt; C(validation).</t>
+      <t>The key invariant is that the cost of manipulating a Claim's confidence exceeds the cost of validating it: C(manipulation) &gt; C(validation).</t>
     </section>
-    <section anchor="conformance"><name>Conformance</name>
+    <section anchor="conformance">
+      <name>Conformance</name>
       <t>A system is VCP-Compatible iff:</t>
-      <t><list style="numbers">
-        <t>It implements the 4 Core Endpoints in Section 4.</t>
-        <t>Confidence for all Claims is computed via Multiplicative Weights Update + Gossip Consensus as defined in Section 5 (GQRVP).</t>
-        <t>All Action objects reference Claim[] as basis. Actions without basis MUST be rejected at Gateway.</t>
-        <t>Trace is immutable, content-addressed, and publicly auditable.</t>
-      </list></t>
+      <ol>
+        <li><t>It implements the 4 Core Endpoints in Section 4.</t></li>
+        <li><t>Confidence for all Claims is computed via Multiplicative Weights Update plus Gossip Consensus as defined in Section 5 (GQRVP).</t></li>
+        <li><t>All Action objects reference Claim as basis. Actions without basis MUST be rejected at Gateway.</t></li>
+        <li><t>Trace is immutable, content-addressed, and publicly auditable.</t></li>
+      </ol>
     </section>
-    <section anchor="core-types"><name>Core Types</name>
-      <section anchor="claim"><name>Claim</name>
+    <section anchor="core-types">
+      <name>Core Types</name>
+      <section anchor="claim">
+        <name>Claim</name>
         <t>The atomic unit of verifiable information.</t>
-        <sourcecode type="json">{
+        <t><sourcecode type="json"><![CDATA[{
   "claim_id": "sha256:...",
   "content": "string",
-  "provenance": [{"type": "url|attestation", "src": "string", "signed_by": "did:..."}],
-  "method": "string",
+  "provenance": [{"type": "url", "src": "string", "signed_by": "did:..."}],
   "confidence": "float 0.0-1.0",
-  "created_at": "RFC3339 timestamp",
-  "expires": "RFC3339 timestamp",
+  "created_at": "RFC3339",
   "trace": ["claim_id"]
-}</sourcecode>
+}]]></sourcecode></t>
       </section>
-      <section anchor="completeness-boundary"><name>Formal Completeness Boundary</name>
-        <t>VCP operates at the boundary of formal provability. Formal-to-epistemic transition threshold: theta_critical = 0.731. When confidence >= threshold, system may treat result as formally sufficient. When below, SHOULD escalate to Continuum-style semantic verification.</t>
-        <t>Empirical sybil-10x-g1.5 trace: 30 confidence scores extracted, theta_critical 0.731 (knee point), 0 below, 30 above. Consistent with Godel-grounded design: remainder must be handled by epistemic verification.</t>
+      <section anchor="completeness">
+        <name>Formal Completeness Boundary</name>
+        <t>Formal-to-epistemic transition threshold: theta_critical = 0.731. When confidence is greater than or equal to threshold, system may treat result as formally sufficient. When below, SHOULD escalate to Continuum-style semantic verification.</t>
+        <t>Empirical sybil-10x-g1.5 trace: 30 scores extracted, 0 below, 30 above threshold. Consistent with Godel-grounded design.</t>
       </section>
-      <section anchor="attestation"><name>Attestation</name>
+      <section anchor="attestation">
+        <name>Attestation</name>
         <t>Cryptographic signature over a Claim by a DID.</t>
-        <sourcecode type="json">{
+        <t><sourcecode type="json"><![CDATA[{
   "attestation_id": "sha256:...",
   "claim_id": "sha256:...",
   "issuer": "did:...",
   "signature": "bytes"
-}</sourcecode>
+}]]></sourcecode></t>
       </section>
-      <section anchor="action"><name>Action</name>
+      <section anchor="action">
+        <name>Action</name>
         <t>A proposed state change grounded in Claims.</t>
-        <sourcecode type="json">{
+        <t><sourcecode type="json"><![CDATA[{
   "action_id": "sha256:...",
   "name": "string",
-  "params": {},
   "basis": ["claim_id"],
   "stake": "uint",
   "proposed_by": "did:..."
-}</sourcecode>
+}]]></sourcecode></t>
       </section>
-      <section anchor="trace"><name>Trace</name>
+      <section anchor="trace">
+        <name>Trace</name>
         <t>Immutable record of verification.</t>
-        <sourcecode type="json">{
+        <t><sourcecode type="json"><![CDATA[{
   "trace_id": "sha256:...",
   "action_id": "sha256:...",
-  "result": "ACCEPTED|REJECTED",
-  "reason": "string",
+  "result": "ACCEPTED",
   "final_confidence": "float",
-  "gqrvp_rounds": "uint",
-  "timestamp": "RFC3339 timestamp",
   "merkle_root": "bytes"
-}</sourcecode>
+}]]></sourcecode></t>
       </section>
     </section>
-    <section anchor="core-endpoints"><name>Core Endpoints</name>
-      <t>All endpoints MUST be served over HTTPS. Request/response bodies are application/json.</t>
-      <section><name>POST /v1/claim</name><t>Submit new Claim. Request: Claim without claim_id, confidence. Response 201: {claim_id}. 400: Invalid schema.</t></section>
-      <section><name>GET /v1/claim/{claim_id}</name><t>Retrieve Claim and current confidence. 200: {claim, confidence, attestations, merkle_proof}. 404: Not found.</t></section>
-      <section><name>POST /v1/action/verify</name><t>Verify Action. Request: Action. Response 200: {status ACCEPTED|REJECTED, trace_id, reason}. Gateway MUST reject if basis empty or confidence &lt; 0.731.</t></section>
-      <section><name>GET /v1/trace/{trace_id}</name><t>Retrieve immutable history. 200: Trace. 404: Not found.</t></section>
+    <section anchor="endpoints">
+      <name>Core Endpoints</name>
+      <t>All endpoints MUST be served over HTTPS. Bodies are application/json.</t>
+      <section anchor="post-claim"><name>POST /v1/claim</name><t>Submit new Claim. Request: Claim without claim_id. Response 201: claim_id. 400: Invalid schema.</t></section>
+      <section anchor="get-claim"><name>GET /v1/claim/{claim_id}</name><t>Retrieve Claim and current confidence. Response 200: claim, confidence, attestations, merkle_proof. 404: Not found.</t></section>
+      <section anchor="post-verify"><name>POST /v1/action/verify</name><t>Verify Action. Request: Action. Response 200: status ACCEPTED or REJECTED, trace_id, reason. Gateway MUST reject if basis empty or confidence less than 0.731.</t></section>
+      <section anchor="get-trace"><name>GET /v1/trace/{trace_id}</name><t>Retrieve immutable history. 200: Trace. 404: Not found.</t></section>
     </section>
-    <section anchor="gqrvp"><name>GQRVP: Security Parameters</name>
-      <t>To prevent Sybil and amplification attacks, VCP-Compatible implementations MUST use: eta=0.2 (learning rate), gamma=1.5 (amplification), eps=0.1 (mixing). Formal proof of 67% Byzantine resilience under these parameters is given in /specs/RFC/GQRVP-security.md.</t>
+    <section anchor="gqrvp">
+      <name>GQRVP Security Parameters</name>
+      <t>To prevent Sybil and amplification attacks, VCP-Compatible implementations MUST use eta=0.2, gamma=1.5, eps=0.1. Formal proof of 67 percent Byzantine resilience under these parameters is given in /specs/RFC/GQRVP-security.md.</t>
     </section>
-    <section anchor="iana"><name>IANA Considerations</name><t>This document has no IANA actions.</t></section>
-    <section anchor="security"><name>Security Considerations</name><t>VCP does not resolve conflicts caused by asymmetry of goals. VCP guarantees that cost of manipulating confidence exceeds cost of validating it, given honest supermajority of stake-weighted attention.</t></section>
+    <section anchor="iana">
+      <name>IANA Considerations</name>
+      <t>This document has no IANA actions.</t>
+    </section>
+    <section anchor="security">
+      <name>Security Considerations</name>
+      <t>VCP does not resolve conflicts caused by asymmetry of goals. VCP guarantees that cost of manipulating confidence exceeds cost of validating it, given honest supermajority of stake-weighted attention.</t>
+    </section>
   </middle>
   <back>
-    <references><name>References</name>
-      <reference anchor="FOUNDATIONS"><front><title>Gravit Epistemic Foundations</title><author><organization>Gravit Open Network Foundation</organization></author><date year="2026"/></front><format type="HTML" target="https://github.com/GravitOpenNetwork/gravitnet/blob/main/docs/FOUNDATIONS.md"/></reference>
+    <references>
+      <name>References</name>
+      <reference anchor="FOUNDATIONS">
+        <front><title>Gravit Epistemic Foundations</title>
+        <author><organization>Gravit Open Network Foundation</organization></author>
+        <date year="2026"/>
+        </front>
+      </reference>
     </references>
-    <section anchor="appendix-b"><name>Appendix B: Godel and theta_critical</name>
-      <t>Threshold theta_critical=0.731 is practical boundary between formal sufficiency and semantic escalation, grounded in observation that no formal system can prove all true statements of interest, as per Godel's Second Incompleteness Theorem. In sybil-10x-g1.5 trace: 30 scores, threshold 0.731, 0 below, 30 above. Demonstrates stable regime where high-confidence convergence dominates, while protocol reserves formal-to-epistemic transition point.</t>
+    <section anchor="appendix-b">
+      <name>Appendix B: Godel and theta_critical</name>
+      <t>Threshold theta_critical=0.731 is practical boundary between formal sufficiency and semantic escalation, grounded in Godel's Second Incompleteness Theorem. In sybil-10x-g1.5 trace: 30 scores, 0 below, 30 above threshold. Demonstrates stable high-confidence convergence.</t>
     </section>
   </back>
 </rfc>
