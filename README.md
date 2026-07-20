@@ -1,5 +1,4 @@
 # Gravit Open Network
-# Gravit Open Network
 
 [![IETF DATATRACKER POSTED](https://img.shields.io/badge/IETF%20DATATRACKER-POSTED-2ea44f?style=for-the-badge)](https://datatracker.ietf.org/doc/draft-gravit-vcp/)
 [![VERSION 00](https://img.shields.io/badge/VERSION-00-0A66C2?style=for-the-badge)](https://www.ietf.org/archive/id/draft-gravit-vcp-00.txt)
