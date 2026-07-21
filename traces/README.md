@@ -81,4 +81,3 @@ print(f'C() invariant violations (should be 0): {len(violations)}')
 ## License
 
 Same as repo root - MIT / Apache-2.0 dual.
-docs: add traces/README.md with reproducibility for VCP -01
