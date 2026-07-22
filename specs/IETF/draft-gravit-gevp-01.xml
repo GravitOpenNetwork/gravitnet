@@ -1,0 +1,276 @@
+<?xml version="1.0" encoding="utf-8"?>
+<rfc category="info" docName="draft-gravit-gevp-01" ipr="trust200902" submissionType="IETF" version="3" xml:lang="en">
+  <front>
+    <title abbrev="GEVP">Gravit Epistemic Verification Protocol (GEVP) v0.1</title>
+    <seriesInfo name="Internet-Draft" value="draft-gravit-gevp-01"/>
+    <author fullname="Dr. Alex Konviser">
+      <organization>Gravit Open Network Foundation</organization>
+      <address>
+        <postal>
+          <city>Zurich</city>
+          <country>Switzerland</country>
+        </postal>
+        <email>ietf@gravit.space</email>
+      </address>
+    </author>
+    <date day="22" month="07" year="2026"/>
+    <area>sec</area>
+    <workgroup>SCITT</workgroup>
+    <keyword>GEVP</keyword>
+    <keyword>GQRVP</keyword>
+    <keyword>SCITT</keyword>
+    <keyword>epistemic</keyword>
+    <keyword>verifiable</keyword>
+    <abstract>
+      <t>Gravit Epistemic Verification Protocol (GEVP) defines minimal data types and APIs for autonomous agents and human-machine systems to achieve epistemic convergence without centralized truth arbiters. GEVP is transport-agnostic, blockchain-agnostic, and model-agnostic. This document defines a parameterized cost model where C_validation is the cost to verify a Claim's provenance and signatures, and C_manipulation is the estimated cost to forge a quorum of attestations under GQRVP. The protocol enforces the engineering invariant C_manipulation > C_validation for all accepted Claims.</t>
+      <t>This document was previously published as draft-gravit-vcp-00 and -01 under the acronym VCP (Verifiable Convergence Protocol). To avoid collision with VeritasChain Protocol (VCP) defined in draft-kamimura-scitt-vcp [KAMIMURA-VCP], which is a SCITT profile for financial trading audit trails first published December 2025, the acronym is changed to GEVP from -02 onward. The two protocols are unrelated and address different domains. The former VCP acronym is deprecated and MUST NOT be used for this protocol.</t>
+      <t>This revision (-02) addresses feedback on -01: pins reproducible trace commits, provides full confusion matrix with false positive rate, clarifies that cost model and resilience bound are heuristic parameterized estimates (not formal derivations from MWU regret bounds), defines exact SCITT Signed Statement, Receipt, and Transparency Service mappings, separates SCITT authenticity guarantees from epistemic truth, and adds Appendix B on Godel completeness boundary.</t>
+    </abstract>
+  </front>
+  <middle>
+    <section anchor="intro">
+      <name>Introduction</name>
+      <t>As AI transitions to autonomous agents, lack of verifiable trust is a bottleneck. Existing transparency systems (SCITT) provide software supply-chain transparency. GEVP extends this to epistemic transparency for AI actions.</t>
+      <t>A system implementing GEVP is an Epistemic Execution System (EES). No Action is accepted without verifiable Claim basis.</t>
+      <t>This document is an Individual Internet-Draft, not endorsed by the IETF, with no formal standing. Intended WG: SCITT. This document is not a SCITT profile for financial trading audit trails; for that, see [KAMIMURA-VCP].</t>
+    </section>
+
+    <section anchor="related-work">
+      <name>Related Work and Disambiguation</name>
+      <t>The acronym VCP is already in active use in the SCITT working group by [KAMIMURA-VCP], first published December 2025, titled "A SCITT Profile for Verifiable Audit Trails in Algorithmic Trading: The VeritasChain Protocol (VCP)". That document defines a SCITT profile for tamper-evident audit trails of AI-driven algorithmic trading decisions, with conformance tiers Silver/Gold/Platinum, per-Actor hash chaining, and crypto-shredding for GDPR.</t>
+      <t>This document (GEVP) defines an unrelated system for epistemic convergence of autonomous agents. To avoid ambiguity in citations, implementation claims, mailing-list discussions, and future RFC references, the acronym VCP is deprecated for this protocol from -02 onward and replaced by GEVP. Implementations MUST use GEVP and MUST NOT use VCP to refer to Gravit Epistemic Verification Protocol. This document references [KAMIMURA-VCP] for disambiguation and for SCITT terminology alignment.</t>
+    </section>
+
+    <section anchor="terminology">
+      <name>Terminology and Definitions</name>
+      <t>GQRVP is defined in this document and across Gravit documentation as "Gossip with Quadratic Reputation and Verifiable Proofs". This definition is canonical and supersedes all prior informal descriptions such as "Quantum-Ready" or "Quantum Resilient" or "Gravit Quantum-Ready Verification Protocol" used in early README drafts or in draft-gravit-vcp-00. GQRVP combines Multiplicative Weights Update (MWU) for reputation with gossip dissemination.</t>
+      <t>Epistemic Execution System (EES): A system where state transitions are gated by verifiable claims. Triad: Open Network (Gateway, Coordinator) - interaction, Continuum (SCE) - state evolution, Quantum (Omega Trace Store) - trace integrity.</t>
+      <t>Claim, Attestation, Action, Trace: See Section 4. These terms are defined for GEVP and are distinct from VCP Event, VCP Issuer, VCP Receipt as defined in [KAMIMURA-VCP].</t>
+    </section>
+
+    <section anchor="cost-model">
+      <name>Cost Model - Parameterized Estimate of C()</name>
+      <t>Let Claim c have k attestations from distinct DIDs. This section defines a parameterized cost estimate, not a formal theorem derived from MWU regret bounds. Full game-theoretic derivation is deferred to [GQRVP-ANALYSIS] as work in progress.</t>
+      <t>C_validation(c) = cost(COSE_Signature_Verify) * k + cost(fetch_trace) + cost(Merkle_Proof_Verify). Unit is abstract gas-equivalent operations. This is operational and transparent.</t>
+      <t>C_manipulation(c) = min estimated cost for adversary to produce k' attestations sufficient to pass Action verification. As parameterized estimate under GQRVP: C_manipulation(c) = k' * cost(DID_creation) + k' * cost(sign) * (1 / eta) ^ gamma, where eta is MWU learning rate (used here as penalty parameter modeling rounds adversary must sustain, not directly as attack cost) and gamma is quadratic exponent penalizing Sybil concentration. The use of eta in this form is heuristic: lower eta slows honest weight decay, increasing rounds adversary must sustain. This is NOT derived from Arora et al. [MWU] Theorem 2.1; it is a modeling choice for cost comparison.</t>
+      <t>Invariant: A Claim is accepted only if C_manipulation(c) > C_validation(c) * security_margin, where security_margin = 2.0 by default. This formalizes the informal "manipulation costs more than validation" as an engineering invariant, not a cryptographic proof.</t>
+    </section>
+
+    <section anchor="conformance">
+      <name>Conformance</name>
+      <t>A system is GEVP-Compatible iff it implements: (1) 4 Core Endpoints defined in Section 5, (2) confidence scoring via MWU plus Gossip as per GQRVP Section 6, (3) Actions reference Claim as basis with rejection if empty, (4) Trace is immutable and content-addressed.</t>
+    </section>
+
+    <section anchor="types">
+      <name>Core Types</name>
+      <section anchor="claim">
+        <name>Claim</name>
+        <t>Atomic epistemic unit: claim_id (UUIDv7, content-addressed), content (CBOR/JSON), provenance (DID + Trace ref), confidence float 0.0-1.0, trace_id. A Claim is NOT a VCP Event as defined in [KAMIMURA-VCP]. In SCITT mapping (Section 8), a Claim is the application payload of a SCITT Signed Statement.</t>
+        <sourcecode type="json">{
+  "claim_id": "sha256:canonical-cbor-hash",
+  "content": "string or CBOR",
+  "provenance": [{"type": "url|attestation", "src": "string", "signed_by": "did:web:..."}],
+  "confidence": 0.0-1.0,
+  "trace_id": "trace-sha256-..."
+}</sourcecode>
+      </section>
+      <section anchor="attestation">
+        <name>Attestation</name>
+        <t>COSE or JOSE signature over Claim hash by DID. DID method MUST be did:web or did:jwk for -02. Note: A GEVP Attestation is NOT a SCITT Receipt. A SCITT Receipt is issued by a Transparency Service and proves registration or inclusion of a Signed Statement in its Verifiable Data Structure. An Attestation is issued by the Claim author (Issuer) and proves authorship. See Section 8 for exact mapping.</t>
+      </section>
+      <section anchor="action">
+        <name>Action</name>
+        <t>State change grounded in Claims. Gateway MUST reject if basis array is empty. Gateway MUST reject if min(confidence of basis) &lt; theta_critical. theta_critical is RECOMMENDED 0.73, see Section 6.2. The previous -00 requirement of MUST 0.731 is retracted as false precision.</t>
+      </section>
+      <section anchor="trace">
+        <name>Trace</name>
+        <t>Immutable, append-only record with final_confidence and merkle_root. A GEVP Trace is NOT equivalent to a SCITT Transparency Service entry. A Trace is application-level record of epistemic verification rounds. In SCITT mapping (Section 8), a Trace is included as part of the Signed Statement payload or as separate attachment referenced by the Statement, and its inclusion is proven by a SCITT Receipt issued by the Transparency Service.</t>
+      </section>
+    </section>
+
+    <section anchor="endpoints">
+      <name>Core Endpoints</name>
+      <t>All endpoints over HTTPS, application/json or application/cbor. Authorization beyond Attestation signature (API auth, rate-limiting, error versioning) is out of scope for -02 and deferred to deployment profile.</t>
+      <t>POST /v1/claim - Submit Claim. Returns claim_id and trace_id. In SCITT terms: application submits payload to be wrapped as Signed Statement.</t>
+      <t>GET /v1/claim/{claim_id} - Fetch Claim with attestations and optional SCITT Receipt if registered.</t>
+      <t>POST /v1/action/verify - Verify Action basis. Input: action + basis claims. Output: accept/reject with cost analysis. This endpoint enforces Registration Policy-like checks (basis non-empty, confidence threshold) before submitting to Transparency Service.</t>
+      <t>GET /v1/trace/{trace_id} - Fetch immutable Trace with Merkle proof. If SCITT-registered, returns also Receipt chain.</t>
+    </section>
+
+    <section anchor="gqrvp">
+      <name>GQRVP Security Parameters and Heuristic Bound</name>
+      <t>GQRVP parameters: eta = 0.2 (MWU learning rate), gamma = 1.5 (quadratic penalty exponent), eps = 0.1 (exploration / gossip fault tolerance).</t>
+      <section anchor="heuristic-bound">
+        <name>Heuristic Resilience Bound - Proof Sketch, Not Formal Derivation</name>
+        <t>This section was titled "Derivation" in -01. Per feedback, it is renamed to heuristic bound with proof sketch. It is NOT a formal theorem derived from MWU regret bounds. It is a parameterized condition for honest weight dominance used for engineering calibration.</t>
+        <t>Heuristic: Under MWU, adversary weight decays as (1-eta)^t. With quadratic penalty gamma, effective Sybil cost grows as n^gamma. As modeling assumption, honest supermajority condition for convergence is modeled as: h &gt; (1 / (1 + gamma^{-1})) + eps, where h is fraction of honest weight.</t>
+        <t>For gamma=1.5: 1/(1+1/1.5)=1/(1+0.666)=0.6. Adding eps=0.1 for network asynchrony and eta=0.2 for learning lag, we model requirement h &gt; 0.7 honest weight, i.e., tolerates f &lt; 0.3 Byzantine weight. This corresponds to approximately 33% standard BFT resilience in worst case without quadratic benefit.</t>
+        <t>Previous -00 claim of "67% Byzantine resilience" is retracted as imprecise and MUST NOT be used. Implementations SHOULD NOT claim 67% without explicit Sybil cost model. Claim "up to 50% resilience under Sybil factor 10x" in -01 is rephrased as observed in simulation under 10x Sybil amplification with gamma=1.5 (see empirical section), not as general theorem. See [GQRVP-ANALYSIS] for full analysis and open questions. Link to Arora et al. [MWU] is for background on MWU, not as source of this formula.</t>
+      </section>
+      <section anchor="theta">
+        <name>Threshold theta_critical</name>
+        <t>theta_critical was set to 0.731 in -00 without derivation. In -01, theta_critical is defined as point where formal verification cost equals empirical validation cost crossover, approximated via calibration on sybil-10x dataset.</t>
+        <t>Methodology: ROC curve on 100 simulated runs (50 honest, 50 Sybil with 10x amplification, g=1.5, artificial 50/50 class balance -- not reflective of real-world attack distribution, documented as limitation). Optimal F1 threshold found at 0.728 +/- 0.015. We round to RECOMMENDED 0.73. The three-decimal 0.731 in -00 was false precision and is deprecated. Deployments MAY calibrate theta between 0.70 and 0.80 per domain. See Appendix B for Godel completeness boundary interpretation.</t>
+      </section>
+    </section>
+
+    <section anchor="empirical">
+      <name>Empirical Validation - Reproducibility with Pinned Commits</name>
+      <t>The -00 statement "sybil-10x-g1.5 trace shows 30 scores above threshold" is replaced with verifiable artifact with pinned commits (addresses -01 TODO).</t>
+      <t>Dataset: traces/sybil-10x-g1.5.jsonl (100 runs, 30 sampled claims per run = 3000 records = 1500 honest + 1500 sybil). Location: https://github.com/GravitOpenNetwork/gravitnet/tree/main/traces</t>
+      <t>Pinned commits for -02: data file https://github.com/GravitOpenNetwork/gravitnet/blob/7755f53/traces/sybil-10x-g1.5.jsonl (commit 7755f53, 1.21 MB, 3000 lines) and README https://github.com/GravitOpenNetwork/gravitnet/blob/9f3e5d1/traces/README.md (commit 9f3e5d1). These blobs are immutable. Future revisions will pin new datasets with new hashes.</t>
+      <t>Full confusion matrix at theta=0.73 for pinned seed (one reproducible instance, not general guarantee):</t>
+      <t>Honest: mean 0.839 sd 0.07, passes theta 1401/1500 (93.4% TPR). Sybil: mean 0.412 sd 0.12, passes theta 6/1500 (0.4% FPR). Combined: 1407 passes out of 3000. True Positives 1401, False Positives 6, True Negatives 1494, False Negatives 99. Precision 0.996, Recall 0.934, F1 0.964. ROC AUC ~0.98 (empirical). Note: 2987/3000 honest >=0.73 mentioned in -01 text was from different seed; corrected to 1401/1500 for pinned file to ensure reproducibility. Variation across seeds is expected. This reconciles published dataset statistics with draft values.</t>
+      <t>Limitation: 50/50 class balance is artificial and does not reflect real attack prior. Dataset is simulation, not production traffic. This is not a proof, but a reproducible calibration for threshold selection.</t>
+      <t>Reproduction: ./tools/verify_local.sh --trace sybil-10x-g1.5 --theta 0.73 -- also python snippet in traces/README.md for independent verification of C() invariant (0 violations expected for honest passes).</t>
+    </section>
+
+    <section anchor="scitt-mapping">
+      <name>SCITT Architecture Mapping - Exact Definitions</name>
+      <t>This section defines the exact mapping of GEVP concepts to SCITT architecture [SCITT-ARCH] and SCRAPI [SCRAPI], addressing disambiguation from [KAMIMURA-VCP].</t>
+      <section anchor="scitt-defs">
+        <name>SCITT Primitives (Recap)</name>
+        <t>Per [SCITT-ARCH]: Issuer creates Signed Statement, submits to Transparency Service via SCRAPI, Service validates against Registration Policy, appends to Verifiable Data Structure (append-only log), and returns Receipt (COSE Receipt, Merkle inclusion proof). Receipt proves registration. Transparent Statement is Signed Statement plus Receipt.</t>
+      </section>
+      <section anchor="gevp-to-scitt">
+        <name>GEVP to SCITT Mapping - Normative</name>
+        <t>Claim: The application payload of a SCITT Signed Statement. When a GEVP Claim is registered, it is encoded as CBOR/JSON and placed in the payload of a COSE_Sign1 Signed Statement. The Issuer of the Signed Statement is the GEVP Issuer (did:web / did:jwk for -02). Custom protected headers MAY include: confidence (float), trace_id, gqrvp_params (eta, gamma, eps).</t>
+        <t>Attestation: NOT a SCITT Receipt. An Attestation is a separate COSE/JOSE signature over Claim hash by DID, proving authorship. Multiple Attestations can be aggregated before creating the Signed Statement. The Signed Statement signature by Issuer MAY coincide with one Attestation if Issuer is also author, but conceptually distinct.</t>
+        <t>Action verification: Pre-registration check performed by GEVP Gateway before submission to Transparency Service. Gateway MUST reject Action if basis array empty or min(confidence) &lt; theta_critical. This check is analogous to Registration Policy enforcement in SCITT, but applied at application layer. Transparency Service MAY also enforce its own Registration Policy (e.g., rate-limiting, DID allowlist).</t>
+        <t>Trace: NOT a Transparency Service entry. A GEVP Trace is application-level immutable record of epistemic verification rounds (gqrvp_rounds, final_confidence, merkle_root of claim set). When registered with SCITT, the Trace is either embedded in Signed Statement payload alongside Claim or stored separately and referenced by trace_id. Inclusion of Trace is proven by SCITT Receipt, not by Trace itself.</t>
+        <t>Transparency Service: In GEVP deployment, a SCITT-compliant Transparency Service configured with GEVP Registration Policy. It operates Verifiable Data Structure. Who acts as operator is deployment-specific and out of scope for -02.</t>
+        <t>Receipt: COSE Receipt issued by Transparency Service proving inclusion of Signed Statement (containing Claim) in its log. GEVP clients MUST verify Receipt via COSE_Verify and Merkle proof. A GEVP client that holds Claim + Attestations + Receipt has registration evidence.</t>
+        <t>Transparent Statement: Signed Statement (with Claim payload) + Receipt. This is what GEVP stores in Omega Trace Store as equivalent to Trace entry with external verifiability.</t>
+      </section>
+      <section anchor="scitt-guarantees">
+        <name>Separation of SCITT Guarantees from Epistemic Guarantees</name>
+        <t>SCITT provides: authenticity (who issued Signed Statement), transparency (inclusion proven by Receipt), registration evidence (when and by which Service), accountability (log is append-only, non-repudiation). SCITT does NOT establish factual accuracy or epistemic truth of Statement payload.</t>
+        <t>GEVP provides on top: epistemic convergence via GQRVP (MWU + quadratic penalty + gossip) and threshold theta_critical. The epistemic mechanism is clearly separated: SCITT guarantees that a Claim was registered and not tampered with; GEVP estimates whether a Claim should be trusted epistemically based on confidence aggregation under Sybil constraints. An attacker can register a false Claim with valid SCITT Receipt; GEVP's role is to assign low confidence to it if honest weight dominates.</t>
+      </section>
+      <section anchor="kamimura-comparison">
+        <name>Comparison to VeritasChain VCP [KAMIMURA-VCP]</name>
+        <t>[KAMIMURA-VCP] defines VCP Event as payload of Signed Statement for trading audit trails, with per-Actor hash chaining, three conformance tiers, and crypto-shredding. GEVP does NOT use per-Actor hash chaining, does NOT define trading-specific modules (VCP-TRADE, VCP-RISK), and does NOT use crypto-shredding. GEVP focuses on confidence aggregation for epistemic claims, not completeness guarantees for trading events. The two profiles are complementary and address different domains.</t>
+      </section>
+    </section>
+
+    <section anchor="iana">
+      <name>IANA Considerations</name>
+      <t>No IANA actions required at this time.</t>
+    </section>
+
+    <section anchor="security">
+      <name>Security Considerations</name>
+      <t>GEVP assumes honest supermajority in weight, not node count, due to quadratic penalty. If DID creation is free and gamma is disabled, Sybil attack reduces to standard BFT 33% bound. Implementations MUST rate-limit DID creation or require proof-of-work/stake for DID registration to preserve C_manipulation > C_validation. DID rate-limiting parameters are not specified in -02 and deferred to deployment profile (trust and admission model).</t>
+      <t>COSE signatures MUST use post-quantum secure suite (e.g., Dilithium) if quantum resilience is claimed -- GEVP core does not claim quantum resilience in -02. did:web introduces DNS/HTTPS central trust anchor -- documented as limitation vs "without centralized truth arbiters".</t>
+      <t>SCITT Receipt verification MUST include Merkle inclusion proof validation and Service identity check per [SCITT-ARCH].</t>
+    </section>
+  </middle>
+  <back>
+    <references>
+      <name>References</name>
+      <reference anchor="SCITT-ARCH">
+        <front>
+          <title>An Architecture for a Transparent and Endorsable Network for Supply Chain Data</title>
+          <author><organization>IETF</organization></author>
+        </front>
+        <seriesInfo name="Internet-Draft" value="draft-ietf-scitt-architecture"/>
+      </reference>
+      <reference anchor="SCRAPI">
+        <front>
+          <title>SCITT Reference API (SCRAPI) - OpenAPI for SCITT</title>
+          <author><organization>IETF</organization></author>
+        </front>
+        <seriesInfo name="Internet-Draft" value="draft-ietf-scitt-scrapi"/>
+      </reference>
+      <reference anchor="KAMIMURA-VCP">
+        <front>
+          <title>A SCITT Profile for Verifiable Audit Trails in Algorithmic Trading: The VeritasChain Protocol (VCP)</title>
+          <author fullname="Tokachi Kamimura"><organization>VeritasChain Standards Organization</organization></author>
+        </front>
+        <seriesInfo name="Internet-Draft" value="draft-kamimura-scitt-vcp"/>
+        <seriesInfo name="URL" value="https://www.ietf.org/archive/id/draft-kamimura-scitt-vcp-00.html"/>
+      </reference>
+      <reference anchor="MWU">
+        <front>
+          <title>The Multiplicative Weights Update Method: a Meta-Algorithm and Applications</title>
+          <author fullname="Sanjeev Arora"><organization>Princeton</organization></author>
+          <author fullname="Elad Hazan"><organization>Princeton</organization></author>
+          <author fullname="Satyen Kale"><organization>Princeton</organization></author>
+          <date year="2012"/>
+        </front>
+      </reference>
+      <reference anchor="GOSSIP">
+        <front>
+          <title>Gossip Algorithms: Design, Analysis and Applications</title>
+          <author fullname="Stephen Boyd"><organization>Stanford</organization></author>
+          <date year="2006"/>
+        </front>
+      </reference>
+      <reference anchor="DID-CORE">
+        <front>
+          <title>Decentralized Identifiers (DIDs) v1.0</title>
+          <author><organization>W3C</organization></author>
+        </front>
+      </reference>
+      <reference anchor="COSE">
+        <front>
+          <title>CBOR Object Signing and Encryption (COSE)</title>
+          <author><organization>IETF</organization></author>
+        </front>
+        <seriesInfo name="RFC" value="9052"/>
+      </reference>
+      <reference anchor="GQRVP-ANALYSIS">
+        <front>
+          <title>GQRVP Security Analysis - Formal Derivation (Work in Progress)</title>
+          <author><organization>Gravit Open Network Foundation</organization></author>
+          <date year="2026"/>
+        </front>
+        <seriesInfo name="URL" value="https://github.com/GravitOpenNetwork/gravitnet/blob/main/specs/RFC/GQRVP-security.md"/>
+        <format type="TXT" target="https://github.com/GravitOpenNetwork/gravitnet/blob/main/specs/RFC/GQRVP-security.md"/>
+      </reference>
+      <reference anchor="TRACE-DATASET">
+        <front>
+          <title>Empirical Trace - sybil-10x-g1.5 Pinned</title>
+          <author><organization>Gravit Open Network Foundation</organization></author>
+          <date year="2026"/>
+        </front>
+        <seriesInfo name="URL" value="https://github.com/GravitOpenNetwork/gravitnet/blob/7755f53/traces/sybil-10x-g1.5.jsonl"/>
+        <format type="TXT" target="https://github.com/GravitOpenNetwork/gravitnet/blob/7755f53/traces/sybil-10x-g1.5.jsonl"/>
+      </reference>
+      <reference anchor="TRACE-README">
+        <front>
+          <title>Traces README Pinned</title>
+          <author><organization>Gravit Open Network Foundation</organization></author>
+          <date year="2026"/>
+        </front>
+        <seriesInfo name="URL" value="https://github.com/GravitOpenNetwork/gravitnet/blob/9f3e5d1/traces/README.md"/>
+      </reference>
+      <reference anchor="GODEL">
+        <front>
+          <title>On Formally Undecidable Propositions of Principia Mathematica and Related Systems</title>
+          <author fullname="Kurt Godel"><organization></organization></author>
+          <date year="1931"/>
+        </front>
+      </reference>
+    </references>
+    <section anchor="appendix-b">
+      <name>Appendix B: Godel and theta_critical -- Formal Completeness Boundary</name>
+      <t>GEVP operates at the boundary of formal provability. No formal system can prove all true statements of interest per Godel's Second Incompleteness Theorem [GODEL]. Theta_critical is defined as practical boundary between formal sufficiency and semantic escalation.</t>
+      <t>In draft-gravit-vcp-00, theta_critical was stated as 0.731 MUST with 30 scores above threshold (0 below, 30 above) as knee point. This was false precision. In -01/-02 (now GEVP), theta is RECOMMENDED 0.73, calibrated via ROC (0.728 0.015) on sybil-10x dataset (100 runs, 30 claims each). In pinned dataset 7755f53: honest mean 0.839 passes 1401/1500 @0.73, sybil mean 0.412 passes 6/1500. When confidence >= theta, system MAY treat result as formally sufficient. When below, SHOULD escalate to Continuum-style semantic verification.</t>
+      <t>Interpretation: High-confidence regime (above theta) dominates for honest claims (93.4% TPR in this seed), but protocol reserves formal-to-epistemic transition point. This reflects Godel-grounded design: remainder must be handled by epistemic verification, not formal proof. This appendix is philosophical interpretation, not formal reduction from Godel.</t>
+    </section>
+    <section anchor="changelog">
+      <name>Changelog -02 vs -01</name>
+      <t>- Renamed from VCP to GEVP to avoid collision with [KAMIMURA-VCP] (VeritasChain Protocol, Dec 2025). Acronym VCP deprecated. Added Related Work disambiguation Section 1.1, added [KAMIMURA-VCP] reference, added comparison Section 8.4.</t>
+      <t>- Pinned commits 7755f53 (data) and 9f3e5d1 (README) for reproducibility, addresses -01 TODO</t>
+      <t>- Added full confusion matrix: TPR 93.4% (1401/1500), FPR 0.4% (6/1500), Precision 0.996, Recall 0.934, F1 0.964, ROC AUC ~0.98 at theta=0.73 -- reconciles dataset statistics</t>
+      <t>- Renamed Derivation to Heuristic Bound with proof sketch, clarified C_manipulation as parameterized estimate not derived from MWU</t>
+      <t>- Defined exact SCITT mappings per [KAMIMURA-VCP] feedback: Attestation != Receipt (Attestation is author signature, Receipt is Service-issued inclusion proof), Trace != Transparency Service entry (Trace is app record, inclusion proven by Receipt), Claim is payload of Signed Statement. Added Section 8 with normative mapping and separation of SCITT authenticity vs epistemic truth guarantees.</t>
+      <t>- Specified trust and admission model: did:web centralization limitation, MUST rate-limit DID creation or require PoW/stake, deferred to deployment profile</t>
+      <t>- Clarified did:web centralization limitation, API auth out of scope</t>
+      <t>- Added Appendix B: Godel completeness boundary</t>
+      <t>- Retracted 67% claim reaffirmed, 50% claim rephrased as observed in simulation</t>
+      <t>- Fixed inconsistency 2987/3000 vs 1401/1500 by pinning to actual file</t>
+    </section>
+  </back>
+</rfc>
